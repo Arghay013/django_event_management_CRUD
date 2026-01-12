@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex justify-between items-center mb-4">
+  <h1 class="text-2xl font-bold">Categories</h1>
+  <a href="{% url 'category_create' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Add Category</a>
+</div>
+
+<div class="space-y-3">
+  {% for category in categories %}
+  <div class="bg-white p-4 rounded shadow flex justify-between items-center">
+    <div>
+      <h3 class="font-semibold">{{ category.name }}</h3>
+      <p class="text-gray-500 text-sm">{{ category.description }}</p>
+    </div>
+    <div class="flex gap-2">
+      <a href="{% url 'category_update' category.id %}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded">Edit</a>
+      <a href="{% url 'category_delete' category.id %}" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded" onclick="return confirm('Are you sure?')">Delete</a>
+    </div>
+  </div>
+  {% empty %}
+  <p>No categories yet</p>
+  {% endfor %}
+</div>
+{% endblock %}

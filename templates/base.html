@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Management System</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  </head>
+  <body class="bg-gray-100">
+    <nav class="bg-blue-600 p-4 text-white flex gap-4">
+      <a href="/">Events</a>
+      <a href="/events/add/">Add Event</a>
+      <a href="/categories/">Categories</a>
+      <a href="/participants/">Participants</a>
+      <a href="/dashboard/">Dashboard</a>
+    </nav>
+
+    <div class="p-6">{% block content %}{% endblock %}</div>
+  </body>
+</html>

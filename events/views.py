@@ -1,8 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Count, Q
 from django.utils.timezone import now
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView, LogoutView
 from .models import Event, Category, Participant
-from .forms import EventForm,CategoryForm, ParticipantForm
+from .forms import EventForm, CategoryForm, ParticipantForm, SignupForm, LoginForm
 
 def event_list(request):
     events = Event.objects.select_related('category').prefetch_related('participants')
@@ -35,6 +38,7 @@ def event_list(request):
         'end_date': end,
     })
 
+@login_required
 def dashboard(request):
     today = now().date()
 
@@ -64,6 +68,7 @@ def dashboard(request):
         'today': today,
     })
     
+@login_required
 def event_create(request):
     form = EventForm(request.POST or None)
     if form.is_valid():
@@ -71,6 +76,7 @@ def event_create(request):
         return redirect('event_list')
     return render(request, 'events/form.html', {'form': form, 'title': 'Add Event'})
 
+@login_required
 def event_update(request, id):
     event = get_object_or_404(Event, id=id)
     form = EventForm(request.POST or None, instance=event)
@@ -79,6 +85,7 @@ def event_update(request, id):
         return redirect('event_list')
     return render(request, 'events/form.html', {'form': form, 'title': 'Edit Event'})
 
+@login_required
 def event_delete(request, id):
     event = get_object_or_404(Event, id=id)
     event.delete()
@@ -88,6 +95,7 @@ def event_detail(request, id):
     event = get_object_or_404(Event, id=id)
     return render(request, 'events/event_detail.html', {'event': event})
 
+@login_required
 def category_list(request):
     categories = Category.objects.all()
     return render(request, 'events/category_list.html', {
@@ -95,6 +103,7 @@ def category_list(request):
     })
 
 
+@login_required
 def category_create(request):
     form = CategoryForm(request.POST or None)
     if form.is_valid():
@@ -105,12 +114,14 @@ def category_create(request):
         'title': 'Add Category'
     })
     
+@login_required
 def participant_list(request):
     participants = Participant.objects.all()
     return render(request, 'events/participant_list.html', {
         'participants': participants
     })
 
+@login_required
 def category_update(request, id):
     category = get_object_or_404(Category, id=id)
     form = CategoryForm(request.POST or None, instance=category)
@@ -119,11 +130,13 @@ def category_update(request, id):
         return redirect('category_list')
     return render(request, 'events/form.html', {'form': form, 'title': 'Edit Category'})
 
+@login_required
 def category_delete(request, id):
     category = get_object_or_404(Category, id=id)
     category.delete()
     return redirect('category_list')
 
+@login_required
 def participant_create(request):
     form = ParticipantForm(request.POST or None)
     if form.is_valid():
@@ -134,6 +147,7 @@ def participant_create(request):
         'title': 'Add Participant'
     })
 
+@login_required
 def participant_update(request, id):
     participant = get_object_or_404(Participant, id=id)
     form = ParticipantForm(request.POST or None, instance=participant)
@@ -142,7 +156,30 @@ def participant_update(request, id):
         return redirect('participant_list')
     return render(request, 'events/form.html', {'form': form, 'title': 'Edit Participant'})
 
+@login_required
 def participant_delete(request, id):
     participant = get_object_or_404(Participant, id=id)
     participant.delete()
     return redirect('participant_list')
+
+
+def signup_view(request):
+    if request.method == "POST":
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('dashboard')
+    else:
+        form = SignupForm()
+
+    return render(request, 'accounts/signup.html', {'form': form})
+
+
+class UserLoginView(LoginView):
+    template_name = 'accounts/login.html'
+    authentication_form = LoginForm
+
+
+class UserLogoutView(LogoutView):
+    next_page = 'event_list'

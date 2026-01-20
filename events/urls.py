@@ -18,4 +18,7 @@ urlpatterns = [
     path('participants/add/', views.participant_create, name='participant_create'),
     path('participants/edit/<int:id>/', views.participant_update, name='participant_update'),
     path('participants/delete/<int:id>/', views.participant_delete, name='participant_delete'),
+    path('signup/', views.signup_view, name='signup'),
+    path('login/', views.UserLoginView.as_view(), name='login'),
+    path('logout/', views.UserLogoutView.as_view(), name='logout'),
 ]

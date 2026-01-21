@@ -27,6 +27,8 @@ urlpatterns = [
     path('groups/<int:group_id>/delete/', views.group_delete, name='group_delete'),
     
     path('signup/', views.signup_view, name='signup'),
+    path('activate/<uidb64>/<token>/', views.activate_account, name='activate_account'),
     path('login/', views.UserLoginView.as_view(), name='login'),
+    path('login-redirect/', views.login_redirect, name='login_redirect'),
     path('logout/', views.UserLogoutView.as_view(), name='logout'),
 ]

@@ -31,6 +31,12 @@ class EventForm(forms.ModelForm):
                     'class': BASE_INPUT_CLASS
                 }
             ),
+            'image': forms.FileInput(
+                attrs={
+                    'class': BASE_INPUT_CLASS,
+                    'accept': 'image/*'
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -81,3 +87,23 @@ class LoginForm(AuthenticationForm):
             field.widget.attrs.update({
                 'class': BASE_INPUT_CLASS
             })
+
+    def clean(self):
+        """Override clean to provide better error messages for inactive users"""
+        try:
+            cleaned_data = super().clean()
+            return cleaned_data
+        except forms.ValidationError as e:
+            # Check if this is an inactive user error
+            username = self.cleaned_data.get('username')
+            if username:
+                try:
+                    user = User.objects.get(username=username)
+                    if not user.is_active:
+                        raise forms.ValidationError(
+                            "This account is inactive. Please check your email for the activation link.",
+                            code='inactive',
+                        )
+                except User.DoesNotExist:
+                    pass
+            raise e

@@ -5,6 +5,10 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.urls import reverse
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
@@ -106,7 +110,15 @@ def dashboard(request):
         'filter_type': filter_type,
         'today': today,
     })
-    
+   
+@login_required
+@admin_required
+def user_list(request):
+    users = User.objects.all().prefetch_related('groups')
+    return render(request, 'events/user_list.html', {
+        'users': users
+    })
+ 
 @login_required
 @organizer_required
 def event_create(request):
@@ -150,9 +162,8 @@ def rsvp_event(request, event_id):
                 messages.warning(request, "You have already RSVP'd to this event.")
             else:
                 event.participants.add(request.user)
-                messages.success(request, f"You have successfully RSVP'd to {event.name}!")
                 
-                # Send confirmation email
+                # Send RSVP confirmation email
                 try:
                     send_mail(
                         subject=f'RSVP Confirmation: {event.name}',
@@ -169,25 +180,15 @@ def rsvp_event(request, event_id):
                         fail_silently=False,
                     )
                 except Exception as e:
-                    # Log the error but don't show to user
-                    print(f"Email sending failed: {e}")
-        
-        elif action == 'cancel_rsvp':
-            if request.user in event.participants.all():
-                event.participants.remove(request.user)
-                messages.success(request, f"You have cancelled your RSVP to {event.name}.")
-            else:
-                messages.warning(request, "You haven't RSVP'd to this event yet.")
-    
-    return redirect('event_detail', id=event_id)
-
-@login_required
-@organizer_required
+                    print(f"RSVP email sending failed: {e}")  # Debug output
+                
+                messages.success(request, f"You have successfully RSVP'd to {event.name}!")
 def category_list(request):
     categories = Category.objects.all()
     return render(request, "events/category_list.html", {
         "categories": categories
     })
+
 
 
 @login_required
@@ -224,21 +225,58 @@ def signup_view(request):
     if request.method == "POST":
         form = SignupForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            # Ensure default groups exist
+            user = form.save(commit=False)
+            user.is_active = False  # Deactivate account until email confirmation
+            user.save()
+            
+            # Ensure default groups exist and assign user to Participant group
             participant_group, _ = Group.objects.get_or_create(name="Participant")
-            organizer_group, _ = Group.objects.get_or_create(name="Organizer")
-            admin_group, _ = Group.objects.get_or_create(name="Admin")
-
-            # New users become Participants by default
             user.groups.add(participant_group)
-
-            login(request, user)
-            return redirect("dashboard")
+            
+            # Send activation email directly
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            activation_link = f"{settings.SITE_URL}{reverse('activate_account', kwargs={'uidb64': uid, 'token': token})}"
+            
+            try:
+                send_mail(
+                    subject='Activate Your Account',
+                    message=f'Hi {user.get_full_name() or user.username},\n\n'
+                           f'Thank you for registering! Please click the link below to activate your account:\n\n'
+                           f'{activation_link}\n\n'
+                           f'If you didn\'t create this account, please ignore this email.\n\n'
+                           f'Best regards,\nEvent Management Team',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                print(f"Email sending failed: {e}")  # Debug output
+            
+            messages.success(request, 'Account created successfully! Please check your email to activate your account.')
+            return redirect("login")
     else:
         form = SignupForm()
 
     return render(request, "accounts/signup.html", {"form": form})
+
+
+def activate_account(request, uidb64, token):
+    """Activate user account from email link"""
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        messages.success(request, 'Your account has been activated successfully! You can now log in.')
+        return redirect('login')
+    else:
+        messages.error(request, 'Activation link is invalid or has expired.')
+        return redirect('login')
 
 
 class UserLoginView(LoginView):
@@ -253,10 +291,58 @@ class UserLogoutView(LogoutView):
 # Admin views for managing users and groups
 @login_required
 @admin_required
-def user_list(request):
-    users = User.objects.all().prefetch_related('groups')
-    return render(request, 'events/user_list.html', {
-        'users': users
+def admin_dashboard(request):
+    """Admin dashboard - full system overview and management"""
+    today = now().date()
+    
+    # Comprehensive stats for admins
+    stats = {
+        "total_events": Event.objects.count(),
+        "upcoming_events": Event.objects.filter(date__gt=today).count(),
+        "past_events": Event.objects.filter(date__lt=today).count(),
+        "total_users": User.objects.count(),
+        "active_users": User.objects.filter(is_active=True).count(),
+        "inactive_users": User.objects.filter(is_active=False).count(),
+        "total_participants": User.objects.filter(groups__name="Participant").count(),
+        "total_organizers": User.objects.filter(groups__name="Organizer").count(),
+        "total_admins": User.objects.filter(groups__name="Admin").count(),
+        "total_categories": Category.objects.count(),
+    }
+
+    # Recent events and users for admin overview
+    recent_events = Event.objects.select_related('category').order_by('-date')[:5]
+    recent_users = User.objects.order_by('-date_joined')[:5]
+
+    return render(request, "events/admin_dashboard.html", {
+        **stats,
+        'recent_events': recent_events,
+        'recent_users': recent_users,
+        'today': today,
+    })
+
+
+@login_required
+@organizer_required
+def organizer_dashboard(request):
+    """Organizer dashboard - manage events and categories"""
+    today = now().date()
+    
+    # Stats relevant to organizers
+    stats = {
+        "my_events": Event.objects.filter().count(),  # Could filter by organizer if we had that field
+        "upcoming_events": Event.objects.filter(date__gt=today).count(),
+        "past_events": Event.objects.filter(date__lt=today).count(),
+        "total_categories": Category.objects.count(),
+        "total_participants": User.objects.filter(groups__name="Participant").count(),
+    }
+
+    # Events for organizer to manage
+    events = Event.objects.select_related('category').prefetch_related('participants').order_by('date')
+
+    return render(request, "events/organizer_dashboard.html", {
+        **stats,
+        'events': events,
+        'today': today,
     })
 
 
@@ -319,3 +405,16 @@ def group_delete(request, group_id):
     else:
         group.delete()
     return redirect('group_list')
+
+@login_required
+def login_redirect(request):
+    user = request.user
+
+    if user.is_superuser or user.groups.filter(name="Admin").exists():
+        return redirect('admin_dashboard')
+
+    if user.groups.filter(name="Organizer").exists():
+        return redirect('organizer_dashboard')
+
+    return redirect('dashboard')  # Participant default
+

@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+  <h1 class="text-3xl font-bold text-gray-800">Organizer Dashboard</h1>
+  <div class="text-sm text-gray-600">
+    Welcome back, {{ request.user.get_full_name|default:request.user.username }} (Organizer)
+  </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+  <!-- My Events -->
+  <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-xl shadow-lg text-white">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-blue-100 text-sm font-medium mb-1">My Events</p>
+        <p class="text-3xl font-bold">{{ my_events_count }}</p>
+        <p class="text-blue-100 text-xs mt-1">{{ upcoming_events }} upcoming</p>
+      </div>
+      <div class="text-4xl opacity-80">📅</div>
+    </div>
+  </div>
+
+  <!-- Total RSVPs -->
+  <div class="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-xl shadow-lg text-white">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-green-100 text-sm font-medium mb-1">Total RSVPs</p>
+        <p class="text-3xl font-bold">{{ total_rsvps }}</p>
+        <p class="text-green-100 text-xs mt-1">Across all events</p>
+      </div>
+      <div class="text-4xl opacity-80">✅</div>
+    </div>
+  </div>
+
+  <!-- Categories -->
+  <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-xl shadow-lg text-white">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-purple-100 text-sm font-medium mb-1">Categories</p>
+        <p class="text-3xl font-bold">{{ total_categories }}</p>
+      </div>
+      <div class="text-4xl opacity-80">🏷️</div>
+    </div>
+  </div>
+</div>
+
+<!-- My Events -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-8">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-bold text-gray-800">My Events</h2>
+    <a href="{% url 'event_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition">
+      Create New Event
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for event in my_events %}
+    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+      <div class="flex items-start justify-between mb-3">
+        <div class="flex-1">
+          <h3 class="font-semibold text-gray-900 mb-1">{{ event.name }}</h3>
+          <p class="text-sm text-gray-600">{{ event.date }} • {{ event.category.name }}</p>
+        </div>
+        <span class="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-1 rounded-full">
+          {{ event.participants.count }} RSVPs
+        </span>
+      </div>
+
+      {% if event.image %}
+      <img src="{{ event.image.url }}" alt="{{ event.name }}" class="w-full h-32 object-cover rounded-lg mb-3">
+      {% else %}
+      <div class="w-full h-32 bg-gray-200 rounded-lg mb-3 flex items-center justify-center">
+        <span class="text-gray-500 text-sm">No image</span>
+      </div>
+      {% endif %}
+
+      <p class="text-sm text-gray-700 mb-3 line-clamp-2">{{ event.description }}</p>
+
+      <div class="flex gap-2">
+        <a href="{% url 'event_detail' event.id %}" class="bg-gray-600 hover:bg-gray-700 text-white py-1 px-3 rounded text-sm font-medium transition">
+          View
+        </a>
+        <a href="{% url 'event_update' event.id %}" class="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded text-sm font-medium transition">
+          Edit
+        </a>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center py-8">
+      <div class="text-gray-400 text-4xl mb-4">📅</div>
+      <p class="text-gray-500 mb-4">You haven't created any events yet</p>
+      <a href="{% url 'event_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition">
+        Create Your First Event
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Recent RSVPs -->
+<div class="bg-white rounded-xl shadow-md p-6">
+  <h2 class="text-xl font-bold text-gray-800 mb-4">Recent RSVPs</h2>
+  <div class="space-y-3">
+    {% for rsvp in recent_rsvps %}
+    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+      <div>
+        <p class="font-medium text-gray-900">{{ rsvp.user.get_full_name|default:rsvp.user.username }}</p>
+        <p class="text-sm text-gray-600">RSVP'd to: {{ rsvp.event.name }}</p>
+      </div>
+      <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-full">
+        {{ rsvp.created_at|date:"M d, Y" }}
+      </span>
+    </div>
+    {% empty %}
+    <p class="text-gray-500 text-center py-4">No RSVPs yet</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

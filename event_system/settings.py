@@ -1,10 +1,14 @@
 from pathlib import Path
-import dj_database_url
+
+try:
+    import dj_database_url
+except ModuleNotFoundError:  # allows running locally without this dependency installed
+    dj_database_url = None
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-assignment-key'
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com', 'http://127.0.0.1:8000']
@@ -57,13 +61,22 @@ WSGI_APPLICATION = 'event_system.wsgi.application'
 #     }
 # }
 
-DATABASES = {
-    'default': dj_database_url.config(
-        # Replace this value with your local database's connection string.
-        default='postgresql://event_management_db_ay71_user:hGMLD2NMaqf64GYyDofUSL4iTRDc7oeP@dpg-d5igl85actks73a55r8g-a.oregon-postgres.render.com/event_management_db_ay71',
-        conn_max_age=600
-    )
-}
+if dj_database_url:
+    DATABASES = {
+        'default': dj_database_url.config(
+            # Replace this value with your local database's connection string.
+            default='postgresql://event_management_db_ay71_user:hGMLD2NMaqf64GYyDofUSL4iTRDc7oeP@dpg-d5igl85actks73a55r8g-a.oregon-postgres.render.com/event_management_db_ay71',
+            conn_max_age=600
+        )
+    }
+else:
+    # Fallback for local/dev if dj-database-url isn't installed
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 LANGUAGE_CODE = 'en-us'
 
@@ -82,3 +95,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'event_list'
 LOGIN_URL = 'login'
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@gmail.com'  # Replace with your email
+EMAIL_HOST_PASSWORD = 'your-app-password'  # Replace with your app password
+DEFAULT_FROM_EMAIL = 'your-email@gmail.com'

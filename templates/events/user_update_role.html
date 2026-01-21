@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Update User Role{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow p-6 max-w-md mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Update Role for {{ user.username }}</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Select Groups</label>
+            {% for group in all_groups %}
+            <div class="flex items-center mb-2">
+                <input type="checkbox" 
+                       name="groups" 
+                       value="{{ group.name }}" 
+                       id="group_{{ group.id }}"
+                       {% if group in user_groups %}checked{% endif %}
+                       class="mr-2">
+                <label for="group_{{ group.id }}" class="text-sm">{{ group.name }}</label>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="flex gap-4">
+            <button type="submit" 
+                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                Update Role
+            </button>
+            <a href="{% url 'user_list' %}" 
+               class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

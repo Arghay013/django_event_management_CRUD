@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
-from .models import Event, Participant, Category
+from .models import Event, Category
 
 
 BASE_INPUT_CLASS = (
@@ -13,15 +13,9 @@ BASE_INPUT_CLASS = (
 
 
 class EventForm(forms.ModelForm):
-    participants = forms.ModelMultipleChoiceField(
-        queryset=Participant.objects.all(),
-        widget=forms.CheckboxSelectMultiple(attrs={'class': 'space-y-2'}),
-        required=False
-    )
-
     class Meta:
         model = Event
-        fields = '__all__'
+        fields = "__all__"
         widgets = {
             'date': forms.DateInput(
                 format='%Y-%m-%d',
@@ -45,27 +39,11 @@ class EventForm(forms.ModelForm):
         for field in self.fields.values():
             widget = field.widget
 
-            if isinstance(widget, forms.CheckboxSelectMultiple):
-                continue
-
             if isinstance(widget, (forms.DateInput, forms.TimeInput)):
-                widget.attrs.setdefault('class', BASE_INPUT_CLASS)
+                widget.attrs.setdefault("class", BASE_INPUT_CLASS)
                 continue
 
-            widget.attrs['class'] = BASE_INPUT_CLASS
-
-
-class ParticipantForm(forms.ModelForm):
-    class Meta:
-        model = Participant
-        fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs.update({
-                'class': BASE_INPUT_CLASS
-            })
+            widget.attrs["class"] = BASE_INPUT_CLASS
 
 
 class CategoryForm(forms.ModelForm):

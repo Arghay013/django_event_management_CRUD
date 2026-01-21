@@ -1,19 +1,20 @@
 {% extends 'base.html' %}
+{% load auth_extras %}
 
 {% block content %}
 <!-- Header -->
 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
-  <h1 class="text-3xl font-bold text-gray-800">Organizer Dashboard</h1>
+  <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
 </div>
 
 <!-- Grid -->
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
   <!-- Total Participants -->
   <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-xl shadow-lg text-white">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-purple-100 text-sm font-medium mb-1">Total Participants</p>
-        <p class="text-3xl font-bold">{{ total_participants }}</p>
+        <p class="text-purple-100 text-sm font-medium mb-1">Total Users</p>
+        <p class="text-3xl font-bold">{{ total_users }}</p>
       </div>
       <div class="text-4xl opacity-80">👥</div>
     </div>
@@ -47,6 +48,20 @@
     {% endif %}
   </a>
 
+  <!-- My RSVPs -->
+  <a href="?filter=rsvp" class="bg-gradient-to-br {% if filter_type == 'rsvp' %}from-pink-600 to-pink-700{% else %}from-pink-500 to-pink-600{% endif %} p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-white">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-pink-100 text-sm font-medium mb-1">My RSVPs</p>
+        <p class="text-3xl font-bold">{{ rsvp_events|length }}</p>
+      </div>
+      <div class="text-4xl opacity-80">✅</div>
+    </div>
+    {% if filter_type == 'rsvp' %}
+    <div class="mt-2 text-xs text-pink-100">✓ Currently viewing</div>
+    {% endif %}
+  </a>
+
   <!-- Past Events  -->
   <a href="?filter=past" class="bg-gradient-to-br {% if filter_type == 'past' %}from-gray-600 to-gray-700{% else %}from-gray-500 to-gray-600{% endif %} p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-white">
     <div class="flex items-center justify-between">
@@ -72,13 +87,15 @@
         Upcoming Events
       {% elif filter_type == 'past' %}
         Past Events
+      {% elif filter_type == 'rsvp' %}
+        My RSVP'd Events
       {% else %}
         Today's Events ({{ today }})
       {% endif %}
     </h2>
-    {% if filter_type != 'today' %}
-    <a href="?filter=today" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
-      ← Back to Today's Events
+    {% if filter_type != 'rsvp' %}
+    <a href="?filter=rsvp" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+      ← Back to My RSVPs
     </a>
     {% endif %}
   </div>
@@ -111,25 +128,61 @@
           <p class="flex items-center gap-2">
             <span class="font-semibold">👥 Participants:</span>
             <span>{{ e.participants.count }}</span>
+            {% if request.user in e.participants.all %}
+              <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-full">RSVP'd</span>
+            {% endif %}
           </p>
         </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="mt-4 grid grid-cols-3 gap-2">
-        <a href="{% url 'event_detail' e.id %}" 
-           class="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-center text-sm font-medium transition">
-          View
-        </a>
-        <a href="{% url 'event_update' e.id %}" 
-           class="bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg text-center text-sm font-medium transition">
-          Edit
-        </a>
-        <a href="{% url 'event_delete' e.id %}" 
-           onclick="return confirm('Are you sure you want to delete this event?')"
-           class="bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-center text-sm font-medium transition">
-          Delete
-        </a>
+      <div class="mt-4 space-y-2">
+        <!-- RSVP Section for Participants -->
+        {% if request.user.is_authenticated and request.user|has_group:'Participant' %}
+        <div class="flex gap-2">
+          {% if request.user in e.participants.all %}
+            <form method="post" action="{% url 'rsvp_event' e.id %}" class="flex-1">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="cancel_rsvp">
+              <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-medium transition"
+                      onclick="return confirm('Are you sure you want to cancel your RSVP?')">
+                Cancel RSVP
+              </button>
+            </form>
+          {% else %}
+            <form method="post" action="{% url 'rsvp_event' e.id %}" class="flex-1">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="rsvp">
+              <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg text-sm font-medium transition">
+                RSVP
+              </button>
+            </form>
+          {% endif %}
+          <a href="{% url 'event_detail' e.id %}" 
+             class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition text-center">
+            View
+          </a>
+        </div>
+        {% else %}
+        <!-- Default buttons for non-participants or when not logged in -->
+        <div class="grid grid-cols-3 gap-2">
+          <a href="{% url 'event_detail' e.id %}" 
+             class="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-center text-sm font-medium transition">
+            View
+          </a>
+          {% if request.user.is_authenticated and request.user.is_superuser or request.user|has_group:'Admin' or request.user|has_group:'Organizer' %}
+          <a href="{% url 'event_update' e.id %}" 
+             class="bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg text-center text-sm font-medium transition">
+            Edit
+          </a>
+          <a href="{% url 'event_delete' e.id %}" 
+             onclick="return confirm('Are you sure you want to delete this event?')"
+             class="bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-center text-sm font-medium transition">
+            Delete
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
       </div>
     </div>
     {% empty %}
@@ -142,6 +195,8 @@
           No upcoming events.
         {% elif filter_type == 'past' %}
           No past events.
+        {% elif filter_type == 'rsvp' %}
+          You haven't RSVP'd to any events yet.
         {% else %}
           No events scheduled for today.
         {% endif %}

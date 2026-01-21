@@ -1,4 +1,5 @@
 {% load static %}
+{% load auth_extras %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,11 +29,18 @@
 
           <!-- Links -->
           <div class="hidden md:flex gap-6 text-sm font-medium">
-            <a href="/" class="hover:text-indigo-600">Events</a>
-            <a href="/events/add/" class="hover:text-indigo-600">Add Event</a>
-            <a href="/categories/" class="hover:text-indigo-600">Categories</a>
-            <a href="/participants/" class="hover:text-indigo-600">Participants</a>
-            <a href="/dashboard/" class="hover:text-indigo-600">Dashboard</a>
+             <a href="/" class="hover:text-indigo-600">Events</a>
+             {% if request.user.is_authenticated %}
+               {% if request.user.is_superuser or request.user|has_group:'Admin' or request.user|has_group:'Organizer' %}
+                 <a href="/events/add/" class="hover:text-indigo-600">Add Event</a>
+                 <a href="/categories/" class="hover:text-indigo-600">Categories</a>
+               {% endif %}
+               <a href="/dashboard/" class="hover:text-indigo-600">Dashboard</a>
+               {% if request.user.is_superuser or request.user|has_group:'Admin' %}
+                 <a href="/users/" class="hover:text-indigo-600">User Management</a>
+                 <a href="/groups/" class="hover:text-indigo-600">Group Management</a>
+               {% endif %}
+             {% endif %}
           </div>
         </div>
 

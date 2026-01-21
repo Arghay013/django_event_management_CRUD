@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load auth_extras %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow">
@@ -10,15 +11,43 @@
   <h3 class="text-lg font-semibold mt-4">Participants:</h3>
   <ul class="list-disc list-inside mt-2">
     {% for p in event.participants.all %}
-      <li>{{ p.name }} ({{ p.email }})</li>
+      <li>{{ p.get_full_name|default:p.username }} ({{ p.email }})</li>
     {% empty %}
       <li>No participants yet</li>
     {% endfor %}
   </ul>
 
+  {% if request.user.is_authenticated and request.user|has_group:'Participant' %}
+  <div class="mt-6">
+    {% if request.user in event.participants.all %}
+      <form method="post" action="{% url 'rsvp_event' event.id %}" class="inline">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="cancel_rsvp">
+        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded" 
+                onclick="return confirm('Are you sure you want to cancel your RSVP?')">
+          Cancel RSVP
+        </button>
+      </form>
+      <p class="text-green-600 mt-2">✓ You have RSVP'd to this event</p>
+    {% else %}
+      <form method="post" action="{% url 'rsvp_event' event.id %}" class="inline">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="rsvp">
+        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+          RSVP to Event
+        </button>
+      </form>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if request.user.is_authenticated %}
+  {% if request.user.is_superuser or request.user|has_group:'Admin' or request.user|has_group:'Organizer' %}
   <div class="mt-6 flex gap-2">
     <a href="{% url 'event_update' event.id %}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">Edit</a>
     <a href="{% url 'event_delete' event.id %}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded" onclick="return confirm('Are you sure?')">Delete</a>
   </div>
+  {% endif %}
+  {% endif %}
 </div>
 {% endblock %}

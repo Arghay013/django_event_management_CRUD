@@ -10,10 +10,10 @@
 <!-- Grid -->
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
   <!-- Total Participants -->
-  <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-xl shadow-lg text-white">
+  <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-xl shadow-lg text-cyan-900">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-purple-100 text-sm font-medium mb-1">Total Users</p>
+        <p class="text-purple-700 text-sm font-medium mb-1">Total Users</p>
         <p class="text-3xl font-bold">{{ total_users }}</p>
       </div>
       <div class="text-4xl opacity-80">👥</div>
@@ -21,58 +21,58 @@
   </div>
 
   <!-- Total Events  -->
-  <a href="?filter=all" class="bg-gradient-to-br {% if filter_type == 'all' %}from-blue-600 to-blue-700{% else %}from-blue-500 to-blue-600{% endif %} p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-white">
+  <a href="?filter=all" class="bg-gradient-to-br {% if filter_type == 'all' %}from-blue-600 to-blue-700{% else %}from-blue-500 to-blue-600{% endif %} p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-cyan-900">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-blue-100 text-sm font-medium mb-1">Total Events</p>
+        <p class="text-blue-700 text-sm font-medium mb-1">Total Events</p>
         <p class="text-3xl font-bold">{{ total_events }}</p>
       </div>
       <div class="text-4xl opacity-80">📅</div>
     </div>
     {% if filter_type == 'all' %}
-    <div class="mt-2 text-xs text-blue-100">✓ Currently viewing</div>
+    <div class="mt-2 text-xs text-blue-700">✓ Currently viewing</div>
     {% endif %}
   </a>
 
   <!-- Upcoming Events  -->
-  <a href="?filter=upcoming" class="bg-gradient-to-br {% if filter_type == 'upcoming' %}from-green-600 to-green-700{% else %}from-green-500 to-green-600{% endif %} p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-white">
+  <a href="?filter=upcoming" class="bg-gradient-to-br {% if filter_type == 'upcoming' %}from-green-600 to-green-700{% else %}from-green-500 to-green-600{% endif %} p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-cyan-900">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-green-100 text-sm font-medium mb-1">Upcoming Events</p>
+        <p class="text-green-800 text-sm font-medium mb-1">Upcoming Events</p>
         <p class="text-3xl font-bold">{{ upcoming_events }}</p>
       </div>
       <div class="text-4xl opacity-80">⏫</div>
     </div>
     {% if filter_type == 'upcoming' %}
-    <div class="mt-2 text-xs text-green-100">✓ Currently viewing</div>
+    <div class="mt-2 text-xs text-green-700">✓ Currently viewing</div>
     {% endif %}
   </a>
 
   <!-- My RSVPs -->
-  <a href="?filter=rsvp" class="bg-gradient-to-br {% if filter_type == 'rsvp' %}from-pink-600 to-pink-700{% else %}from-pink-500 to-pink-600{% endif %} p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-white">
+  <a href="?filter=rsvp" class="bg-gradient-to-br {% if filter_type == 'rsvp' %}from-pink-600 to-pink-700{% else %}from-pink-500 to-pink-600{% endif %} p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-cyan-800">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-pink-100 text-sm font-medium mb-1">My RSVPs</p>
+        <p class="text-pink-700 text-sm font-medium mb-1">My RSVPs</p>
         <p class="text-3xl font-bold">{{ rsvp_events|length }}</p>
       </div>
       <div class="text-4xl opacity-80">✅</div>
     </div>
     {% if filter_type == 'rsvp' %}
-    <div class="mt-2 text-xs text-pink-100">✓ Currently viewing</div>
+    <div class="mt-2 text-xs text-pink-700">✓ Currently viewing</div>
     {% endif %}
   </a>
 
   <!-- Past Events  -->
-  <a href="?filter=past" class="bg-gradient-to-br {% if filter_type == 'past' %}from-gray-600 to-gray-700{% else %}from-gray-500 to-gray-600{% endif %} p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-white">
+  <a href="?filter=past" class="bg-gradient-to-br {% if filter_type == 'past' %}from-gray-600 to-gray-700{% else %}from-gray-500 to-gray-600{% endif %} p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-cyan-900">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-gray-100 text-sm font-medium mb-1">Past Events</p>
+        <p class="text-gray-800 text-sm font-medium mb-1">Past Events</p>
         <p class="text-3xl font-bold">{{ past_events }}</p>
       </div>
       <div class="text-4xl opacity-80">📜</div>
     </div>
     {% if filter_type == 'past' %}
-    <div class="mt-2 text-xs text-gray-100">✓ Currently viewing</div>
+    <div class="mt-2 text-xs text-gray-900">✓ Currently viewing</div>
     {% endif %}
   </a>
 </div>

@@ -99,7 +99,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 SITE_URL = 'http://127.0.0.1:8000/'
 
 # Authentication settings
-LOGIN_REDIRECT_URL = 'dashboard'
+LOGIN_REDIRECT_URL = 'login_redirect'
 LOGOUT_REDIRECT_URL = 'event_list'
 LOGIN_URL = 'login'
 

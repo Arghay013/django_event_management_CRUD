@@ -12,22 +12,22 @@
 <!-- Stats Grid -->
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
   <!-- Total Users -->
-  <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-xl shadow-lg text-cyan-900">
+  <div class="bg-gradient-to-br from-blue-400 to-blue-600 p-6 rounded-xl shadow-lg text-white">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-blue-500 text-sm font-medium mb-1">Total Users</p>
+        <p class="text-white text-sm font-medium mb-1">Total Users</p>
         <p class="text-3xl font-bold">{{ total_users }}</p>
-        <p class="text-blue-500 text-xs mt-1">{{ active_users }} active, {{ inactive_users }} inactive</p>
+        <p class="text-white text-xs mt-1">{{ active_users }} active, {{ inactive_users }} inactive</p>
       </div>
       <div class="text-4xl opacity-80">👥</div>
     </div>
   </div>
 
   <!-- Total Events -->
-  <div class="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-xl shadow-lg text-cyan-900">
+  <div class="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-xl shadow-lg text-white">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-green-500 text-sm font-medium mb-1">Total Events</p>
+        <p class="text-white text-sm font-medium mb-1">Total Events</p>
         <p class="text-3xl font-bold">{{ total_events }}</p>
       </div>
       <div class="text-4xl opacity-80">📅</div>
@@ -35,23 +35,23 @@
   </div>
 
   <!-- User Roles -->
-  <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-xl shadow-lg text-cyan-900">
+  <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-xl shadow-lg text-white">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-purple-500 text-sm font-medium mb-1">User Roles</p>
+        <p class="text-white text-sm font-medium mb-1">User Roles</p>
         <p class="text-lg font-bold">{{ total_participants }} Participants</p>
-        <p class="text-purple-500 text-xs">{{ total_organizers }} Organizers</p>
-        <p class="text-purple-500 text-xs">{{ total_admins }} Admins</p>
+        <p class="text-white text-xs">{{ total_organizers }} Organizers</p>
+        <p class="text-white text-xs">{{ total_admins }} Admins</p>
       </div>
       <div class="text-4xl opacity-80">👤</div>
     </div>
   </div>
 
   <!-- Categories -->
-  <div class="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-xl shadow-lg text-cyan-900">
+  <div class="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-xl shadow-lg text-white">
     <div class="flex items-center justify-between">
       <div>
-        <p class="text-orange-500 text-sm font-medium mb-1">Categories</p>
+        <p class="text-white text-sm font-medium mb-1">Categories</p>
         <p class="text-3xl font-bold">{{ total_categories }}</p>
       </div>
       <div class="text-4xl opacity-80">🏷️</div>
@@ -106,16 +106,16 @@
 <div class="mt-8 bg-white rounded-xl shadow-md p-6">
   <h2 class="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-    <a href="{% url 'user_list' %}" class="bg-blue-600 hover:bg-blue-700 text-cyan-900 py-3 px-4 rounded-lg text-center font-medium transition">
+    <a href="{% url 'user_list' %}" class="bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg text-center font-medium transition">
       Manage Users
     </a>
-    <a href="{% url 'event_create' %}" class="bg-green-600 hover:bg-green-700 text-cyan-900 py-3 px-4 rounded-lg text-center font-medium transition">
+    <a href="{% url 'event_create' %}" class="bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg text-center font-medium transition">
       Add Event
     </a>
-    <a href="{% url 'category_create' %}" class="bg-purple-600 hover:bg-purple-700 text-cyan-900 py-3 px-4 rounded-lg text-center font-medium transition">
+    <a href="{% url 'category_create' %}" class="bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg text-center font-medium transition">
       Add Category
     </a>
-    <a href="{% url 'event_list' %}" class="bg-gray-600 hover:bg-gray-700 text-cyan-900 py-3 px-4 rounded-lg text-center font-medium transition">
+    <a href="{% url 'event_list' %}" class="bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-lg text-center font-medium transition">
       View All Events
     </a>
   </div>

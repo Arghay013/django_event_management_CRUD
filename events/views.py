@@ -262,25 +262,7 @@ def signup_view(request):
             participant_group, _ = Group.objects.get_or_create(name="Participant")
             user.groups.add(participant_group)
             
-            # Send activation email directly
-            token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            activation_link = f"{settings.SITE_URL}{reverse('activate_account', kwargs={'uidb64': uid, 'token': token})}"
-            
-            try:
-                send_mail(
-                    subject='Activate Your Account',
-                    message=f'Hi {user.get_full_name() or user.username},\n\n'
-                           f'Thank you for registering! Please click the link below to activate your account:\n\n'
-                           f'{activation_link}\n\n'
-                           f'If you didn\'t create this account, please ignore this email.\n\n'
-                           f'Best regards,\nEvent Management Team',
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[user.email],
-                    fail_silently=False,
-                )
-            except Exception as e:
-                print(f"Email sending failed: {e}")  # Debug output
+            # Email is now handled by the signal in signals.py
             
             messages.success(request, 'Account created successfully! Please check your email to activate your account.')
             return redirect("login")

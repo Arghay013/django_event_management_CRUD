@@ -1,5 +1,5 @@
 from pathlib import Path
-
+from decouple import config
 try:
     import dj_database_url
 except ModuleNotFoundError:  # allows running locally without this dependency installed
@@ -99,21 +99,20 @@ MEDIA_ROOT = BASE_DIR / 'media'
 SITE_URL = 'http://127.0.0.1:8000/'
 
 # Authentication settings
-LOGIN_REDIRECT_URL = 'dashboard'
+LOGIN_REDIRECT_URL = 'login_redirect'
 LOGOUT_REDIRECT_URL = 'event_list'
 LOGIN_URL = 'login'
 
-# Email settings
-if DEBUG:
-    # Use console backend for development - emails will be printed to console
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-else:
-    # Use SMTP backend for production
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = 'your-email@gmail.com'  # Replace with your email
-    EMAIL_HOST_PASSWORD = 'your-app-password'  # Replace with your app password
+# Email settings (REAL EMAIL SENDING)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
 
 DEFAULT_FROM_EMAIL = 'noreply@eventmanagement.com'

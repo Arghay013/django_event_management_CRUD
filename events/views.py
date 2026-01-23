@@ -183,6 +183,35 @@ def rsvp_event(request, event_id):
                     print(f"RSVP email sending failed: {e}")  # Debug output
                 
                 messages.success(request, f"You have successfully RSVP'd to {event.name}!")
+        
+        elif action == 'cancel_rsvp':
+            if request.user in event.participants.all():
+                event.participants.remove(request.user)
+                
+                # Send cancellation confirmation email
+                try:
+                    send_mail(
+                        subject=f'RSVP Cancellation: {event.name}',
+                        message=f'Hi {request.user.get_full_name() or request.user.username},\n\n'
+                               f'Your RSVP for the following event has been cancelled:\n\n'
+                               f'Event: {event.name}\n'
+                               f'Date: {event.date}\n'
+                               f'Time: {event.time}\n'
+                               f'Location: {event.location}\n\n'
+                               f'If this was a mistake, you can RSVP again.\n\n'
+                               f'Best regards,\nEvent Management Team',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[request.user.email],
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    print(f"Cancellation email sending failed: {e}")  # Debug output
+                
+                messages.success(request, f"You have cancelled your RSVP for {event.name}.")
+            else:
+                messages.warning(request, "You are not RSVP'd to this event.")
+        
+        return redirect('event_detail', id=event_id)
 def category_list(request):
     categories = Category.objects.all()
     return render(request, "events/category_list.html", {
@@ -233,25 +262,7 @@ def signup_view(request):
             participant_group, _ = Group.objects.get_or_create(name="Participant")
             user.groups.add(participant_group)
             
-            # Send activation email directly
-            token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            activation_link = f"{settings.SITE_URL}{reverse('activate_account', kwargs={'uidb64': uid, 'token': token})}"
-            
-            try:
-                send_mail(
-                    subject='Activate Your Account',
-                    message=f'Hi {user.get_full_name() or user.username},\n\n'
-                           f'Thank you for registering! Please click the link below to activate your account:\n\n'
-                           f'{activation_link}\n\n'
-                           f'If you didn\'t create this account, please ignore this email.\n\n'
-                           f'Best regards,\nEvent Management Team',
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[user.email],
-                    fail_silently=False,
-                )
-            except Exception as e:
-                print(f"Email sending failed: {e}")  # Debug output
+            # Email is now handled by the signal in signals.py
             
             messages.success(request, 'Account created successfully! Please check your email to activate your account.')
             return redirect("login")

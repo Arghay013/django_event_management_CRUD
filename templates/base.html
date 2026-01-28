@@ -7,7 +7,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Event Management System{% endblock %}</title>
 
-  <!-- Custom CSS -->
   <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 
@@ -33,6 +32,7 @@
                  <a href="/categories/" class="hover:text-indigo-600">Categories</a>
                {% endif %}
                <a href="/dashboard/" class="hover:text-indigo-600">Dashboard</a>
+               <a href="{% url 'profile' %}" class="hover:text-indigo-600">Profile</a>
                {% if request.user.is_superuser or request.user|has_group:'Admin' %}
                  <a href="/users/" class="hover:text-indigo-600">User Management</a>
                  <a href="/groups/" class="hover:text-indigo-600">Group Management</a>

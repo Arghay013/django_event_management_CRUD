@@ -4,7 +4,7 @@ from django.utils.timezone import now
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group, User
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordResetView, PasswordResetConfirmView
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -12,8 +12,11 @@ from django.urls import reverse
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import Event, Category
-from .forms import EventForm, CategoryForm, SignupForm, LoginForm
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, DetailView
+from django.utils.decorators import method_decorator
+from django.urls import reverse_lazy
+from .models import Event, Category, UserProfile
+from .forms import EventForm, CategoryForm, SignupForm, LoginForm, UserProfileForm, CustomPasswordChangeForm, CustomPasswordResetForm, CustomSetPasswordForm
 
 
 def _in_group(user, group_name: str) -> bool:
@@ -43,36 +46,43 @@ def participant_required(view_func):
 
     return user_passes_test(check)(view_func)
 
-def event_list(request):
-    events = Event.objects.select_related('category').prefetch_related('participants')
+class EventListView(ListView):
+    """Class-based view for displaying list of events with filtering"""
+    model = Event
+    template_name = 'events/event_list.html'
+    context_object_name = 'events'
+    paginate_by = 20
 
-    start = request.GET.get('start')
-    end = request.GET.get('end')
-    category_id = request.GET.get('category')
-    search = request.GET.get('search')  
-
-    # Search filter 
-    if search:
-        events = events.filter(
-            Q(name__icontains=search) | Q(location__icontains=search)
-        )
-
-    if start and end:
-        events = events.filter(date__range=[start, end])
-
-    if category_id:
-        events = events.filter(category_id=category_id)
-
-    categories = Category.objects.all()
-
-    return render(request, 'events/event_list.html', {
-        'events': events,
-        'categories': categories,
-        'search': search,
-        'selected_category': category_id,
-        'start_date': start,
-        'end_date': end,
-    })
+    def get_queryset(self):
+        events = Event.objects.select_related('category').prefetch_related('participants')
+        
+        start = self.request.GET.get('start')
+        end = self.request.GET.get('end')
+        category_id = self.request.GET.get('category')
+        search = self.request.GET.get('search')
+        
+        # Search filter
+        if search:
+            events = events.filter(
+                Q(name__icontains=search) | Q(location__icontains=search)
+            )
+        
+        if start and end:
+            events = events.filter(date__range=[start, end])
+        
+        if category_id:
+            events = events.filter(category_id=category_id)
+        
+        return events
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'] = Category.objects.all()
+        context['search'] = self.request.GET.get('search', '')
+        context['selected_category'] = self.request.GET.get('category', '')
+        context['start_date'] = self.request.GET.get('start', '')
+        context['end_date'] = self.request.GET.get('end', '')
+        return context
 
 @login_required
 @participant_required
@@ -119,31 +129,42 @@ def user_list(request):
         'users': users
     })
  
-@login_required
-@organizer_required
-def event_create(request):
-    form = EventForm(request.POST or None)
-    if form.is_valid():
-        form.save()
-        return redirect('event_list')
-    return render(request, "events/form.html", {"form": form, "title": "Add Event"})
+@method_decorator(login_required, name='dispatch')
+@method_decorator(organizer_required, name='dispatch')
+class EventCreateView(CreateView):
+    """Class-based view for creating new events (organizers only)"""
+    model = Event
+    form_class = EventForm
+    template_name = "events/form.html"
+    success_url = reverse_lazy('event_list')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "Add Event"
+        return context
 
-@login_required
-@organizer_required
-def event_update(request, id):
-    event = get_object_or_404(Event, id=id)
-    form = EventForm(request.POST or None, instance=event)
-    if form.is_valid():
-        form.save()
-        return redirect('event_list')
-    return render(request, "events/form.html", {"form": form, "title": "Edit Event"})
+@method_decorator(login_required, name='dispatch')
+@method_decorator(organizer_required, name='dispatch')
+class EventUpdateView(UpdateView):
+    """Class-based view for updating events (organizers only)"""
+    model = Event
+    form_class = EventForm
+    template_name = "events/form.html"
+    success_url = reverse_lazy('event_list')
+    pk_url_kwarg = 'id'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "Edit Event"
+        return context
 
-@login_required
-@organizer_required
-def event_delete(request, id):
-    event = get_object_or_404(Event, id=id)
-    event.delete()
-    return redirect('event_list')
+@method_decorator(login_required, name='dispatch')
+@method_decorator(organizer_required, name='dispatch')
+class EventDeleteView(DeleteView):
+    """Class-based view for deleting events (organizers only)"""
+    model = Event
+    success_url = reverse_lazy('event_list')
+    pk_url_kwarg = 'id'
 
 def event_detail(request, id):
     event = get_object_or_404(Event, id=id)
@@ -180,7 +201,7 @@ def rsvp_event(request, event_id):
                         fail_silently=False,
                     )
                 except Exception as e:
-                    print(f"RSVP email sending failed: {e}")  # Debug output
+                    print(f"RSVP email sending failed: {e}") 
                 
                 messages.success(request, f"You have successfully RSVP'd to {event.name}!")
         
@@ -212,12 +233,77 @@ def rsvp_event(request, event_id):
                 messages.warning(request, "You are not RSVP'd to this event.")
         
         return redirect('event_detail', id=event_id)
-def category_list(request):
-    categories = Category.objects.all()
-    return render(request, "events/category_list.html", {
-        "categories": categories
-    })
+class CategoryListView(ListView):
+    """Class-based view for displaying list of categories"""
+    model = Category
+    template_name = "events/category_list.html"
+    context_object_name = "categories"
 
+
+# Profile Management Views
+@method_decorator(login_required, name='dispatch')
+class ProfileView(DetailView):
+    """Class-based view for viewing user profile"""
+    model = UserProfile
+    template_name = "accounts/profile.html"
+    context_object_name = "profile"
+    
+    def get_object(self, queryset=None):
+        profile, created = UserProfile.objects.get_or_create(user=self.request.user)
+        return profile
+
+
+@method_decorator(login_required, name='dispatch')
+class ProfileEditView(UpdateView):
+    """Class-based view for editing user profile"""
+    model = UserProfile
+    form_class = UserProfileForm
+    template_name = "accounts/profile_edit.html"
+    success_url = reverse_lazy('profile')
+    
+    def get_object(self, queryset=None):
+        profile, created = UserProfile.objects.get_or_create(user=self.request.user)
+        return profile
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Profile updated successfully!')
+        return super().form_valid(form)
+
+
+@method_decorator(login_required, name='dispatch')
+class CustomPasswordChangeView(PasswordChangeView):
+    """Class-based view for changing password"""
+    form_class = CustomPasswordChangeForm
+    template_name = 'accounts/password_change.html'
+    success_url = reverse_lazy('profile')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Password changed successfully!')
+        return super().form_valid(form)
+
+
+class CustomPasswordResetView(PasswordResetView):
+    """Class-based view for password reset"""
+    form_class = CustomPasswordResetForm
+    template_name = 'accounts/password_reset.html'
+    email_template_name = 'accounts/password_reset_email.html'
+    subject_template_name = 'accounts/password_reset_subject.txt'
+    success_url = reverse_lazy('password_reset_done')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Check your email for password reset instructions!')
+        return super().form_valid(form)
+
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    """Class-based view for confirming password reset"""
+    form_class = CustomSetPasswordForm
+    template_name = 'accounts/password_reset_confirm.html'
+    success_url = reverse_lazy('password_reset_complete')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Password reset successfully! You can now login with your new password.')
+        return super().form_valid(form)
 
 
 @login_required
@@ -231,9 +317,6 @@ def category_create(request):
         'form': form,
         'title': 'Add Category'
     })
-    
-@login_required
-@organizer_required
 def category_update(request, id):
     category = get_object_or_404(Category, id=id)
     form = CategoryForm(request.POST or None, instance=category)
@@ -338,21 +421,25 @@ def organizer_dashboard(request):
     """Organizer dashboard - manage events and categories"""
     today = now().date()
     
+    # Events for organizer to manage
+    my_events = Event.objects.select_related('category').prefetch_related('participants').order_by('date')
+    
+    # Calculate total RSVPs across all events
+    total_rsvps = sum(event.participants.count() for event in my_events)
+    
     # Stats relevant to organizers
     stats = {
-        "my_events": Event.objects.filter().count(),  # Could filter by organizer if we had that field
+        "my_events_count": my_events.count(),
         "upcoming_events": Event.objects.filter(date__gt=today).count(),
         "past_events": Event.objects.filter(date__lt=today).count(),
         "total_categories": Category.objects.count(),
         "total_participants": User.objects.filter(groups__name="Participant").count(),
+        "total_rsvps": total_rsvps,
     }
-
-    # Events for organizer to manage
-    events = Event.objects.select_related('category').prefetch_related('participants').order_by('date')
 
     return render(request, "events/organizer_dashboard.html", {
         **stats,
-        'events': events,
+        'my_events': my_events,
         'today': today,
     })
 

@@ -65,7 +65,7 @@ if dj_database_url:
     DATABASES = {
         'default': dj_database_url.config(
             # Replace this value with your local database's connection string.
-            default='postgresql://event_management_db_ay71_user:hGMLD2NMaqf64GYyDofUSL4iTRDc7oeP@dpg-d5igl85actks73a55r8g-a.oregon-postgres.render.com/event_management_db_ay71',
+            default='postgresql://event_management_db_iaxf_user:o9kegTk5YZPPVYOP81z7UUDKdrEQI12p@dpg-d719v1h4tr6s73e8ou30-a.oregon-postgres.render.com/event_management_db_iaxf',
             conn_max_age=600
         )
     }

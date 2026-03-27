@@ -16,48 +16,84 @@ class Command(BaseCommand):
         organizer_group, _ = Group.objects.get_or_create(name="Organizer")
         admin_group, _ = Group.objects.get_or_create(name="Admin")
 
-        # Create Categories
+        # ----- FIXED USERS -----
+        organizer_user, created = User.objects.get_or_create(
+            username="arghay_deb",
+            defaults={
+                "email": "organizer@test.com",
+                "first_name": "Arghay",
+                "last_name": "Deb",
+                "is_active": True
+            }
+        )
+        organizer_user.set_password("1234")
+        organizer_user.save()
+        organizer_user.groups.add(organizer_group)
+
+        participant_user, created = User.objects.get_or_create(
+            username="arghay013",
+            defaults={
+                "email": "participant@test.com",
+                "first_name": "Arghay",
+                "last_name": "Paul",
+                "is_active": True
+            }
+        )
+        participant_user.set_password("1234")
+        participant_user.save()
+        participant_user.groups.add(participant_group)
+
+        # ----- Categories -----
         categories = []
         for _ in range(5):
-            cat = Category.objects.create(
-                name=fake.word().title(),
-                description=fake.sentence()
+            name = fake.word().title()
+            cat, _ = Category.objects.get_or_create(
+                name=name,
+                defaults={"description": fake.sentence()}
             )
             categories.append(cat)
 
-        # Create Users
-        users = []
+        # ----- Random Users -----
+        users = [organizer_user, participant_user]  # Always include fixed users
         for _ in range(20):
-            user = User.objects.create_user(
-                username=fake.unique.user_name(),
-                email=fake.unique.email(),
-                first_name=fake.first_name(),
-                last_name=fake.last_name(),
-                password='password123'  # For testing purposes
+            username = fake.unique.user_name()
+            user, created = User.objects.get_or_create(
+                username=username,
+                defaults={
+                    "email": fake.unique.email(),
+                    "first_name": fake.first_name(),
+                    "last_name": fake.last_name(),
+                }
             )
-            # Assign random roles
-            if random.random() < 0.1:  # 10% admins
-                user.groups.add(admin_group)
-            elif random.random() < 0.3:  # 30% organizers (of remaining)
-                user.groups.add(organizer_group)
-            else:  # 60% participants
-                user.groups.add(participant_group)
+            if created:
+                user.set_password("password123")
+                user.save()
+                # Assign random roles
+                if random.random() < 0.1:
+                    user.groups.add(admin_group)
+                elif random.random() < 0.3:
+                    user.groups.add(organizer_group)
+                else:
+                    user.groups.add(participant_group)
             users.append(user)
 
-        # Create Events
+        # ----- Events -----
         for _ in range(10):
-            event = Event.objects.create(
-                name=fake.catch_phrase(),
-                description=fake.text(),
-                date=fake.date_between(start_date='-5d', end_date='+10d'),
-                time=fake.time(),
-                location=fake.city(),
-                category=random.choice(categories)
+            event_name = fake.catch_phrase()
+            event, created = Event.objects.get_or_create(
+                name=event_name,
+                defaults={
+                    "description": fake.text(),
+                    "date": fake.date_between(start_date='-5d', end_date='+10d'),
+                    "time": fake.time(),
+                    "location": fake.city(),
+                    "category": random.choice(categories)
+                }
             )
-            event.participants.set(
-                random.sample(users, random.randint(3, 8))
-            )
+            # Assign participants if newly created
+            if created:
+                event.participants.set(random.sample(users, random.randint(3, 8)))
 
         self.stdout.write(
-            self.style.SUCCESS('Successfully seeded database with fake data')
+            self.style.SUCCESS('Successfully seeded database with fake data (no duplicates, fixed users present)')
         )

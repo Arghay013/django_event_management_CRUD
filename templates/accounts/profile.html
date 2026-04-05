@@ -3,76 +3,82 @@
 {% block title %}Profile - Event Management System{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-4xl mx-auto">
+<div class="max-w-6xl mx-auto py-4">
+    <div class="space-y-6">
+
         <!-- Profile Header -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div class="flex items-center gap-6">
-                {% if profile.profile_picture %}
-                    <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover">
-                {% else %}
-                    <div class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-2xl">
-                        {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+        <div class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-indigo-100">
+            <div class="bg-gradient-to-r from-gray-900 via-indigo-900 to-blue-700 px-6 py-8 text-white">
+                <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                    <div class="flex items-center gap-5">
+                        {% if profile.profile_picture %}
+                            <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" class="h-24 w-24 rounded-full border-4 border-white/30 object-cover shadow-lg">
+                        {% else %}
+                            <div class="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white/30 bg-white/10 text-2xl font-bold text-white shadow-lg">
+                                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                            </div>
+                        {% endif %}
+
+                        <div>
+                            <h1 class="text-3xl font-bold">{{ user.get_full_name|default:user.username }}</h1>
+                            <p class="mt-1 text-white/80">@{{ user.username }}</p>
+
+                            {% if user.groups.all %}
+                                <p class="mt-2 text-sm text-white/80">
+                                    <strong>Role(s):</strong> {{ user.groups.all|join:", " }}
+                                </p>
+                            {% endif %}
+                        </div>
                     </div>
-                {% endif %}
-                
-                <div class="flex-1">
-                    <h1 class="text-3xl font-bold text-gray-800">{{ user.get_full_name|default:user.username }}</h1>
-                    <p class="text-gray-600">@{{ user.username }}</p>
-                    {% if user.groups.all %}
-                        <p class="text-sm text-gray-500 mt-2">
-                            <strong>Role(s):</strong> {{ user.groups.all|join:", " }}
-                        </p>
-                    {% endif %}
-                </div>
-                
-                <div class="space-y-2">
-                    <a href="{% url 'profile_edit' %}" class="block px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-center">
-                        Edit Profile
-                    </a>
-                    <a href="{% url 'password_change' %}" class="block px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-center">
-                        Change Password
-                    </a>
+
+                    <div class="flex flex-wrap gap-3">
+                        <a href="{% url 'profile_edit' %}" class="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-50">
+                            Edit Profile
+                        </a>
+                        <a href="{% url 'password_change' %}" class="rounded-xl border border-white/30 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                            Change Password
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Profile Information -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Info Cards -->
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <!-- Contact Information -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Contact Information</h2>
+            <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-indigo-100">
+                <h2 class="text-xl font-bold text-gray-900 mb-5">Contact Information</h2>
                 <div class="space-y-4">
-                    <div>
-                        <label class="text-gray-600 text-sm">Email</label>
-                        <p class="text-gray-800 font-medium">{{ user.email|default:"Not provided" }}</p>
+                    <div class="rounded-2xl bg-indigo-50 p-4">
+                        <label class="text-sm font-medium text-gray-500">Email</label>
+                        <p class="mt-1 font-semibold text-gray-800">{{ user.email|default:"Not provided" }}</p>
                     </div>
-                    <div>
-                        <label class="text-gray-600 text-sm">Phone Number</label>
-                        <p class="text-gray-800 font-medium">{{ profile.phone_number|default:"Not provided" }}</p>
+                    <div class="rounded-2xl bg-blue-50 p-4">
+                        <label class="text-sm font-medium text-gray-500">Phone Number</label>
+                        <p class="mt-1 font-semibold text-gray-800">{{ profile.phone_number|default:"Not provided" }}</p>
                     </div>
-                    <div>
-                        <label class="text-gray-600 text-sm">Date of Birth</label>
-                        <p class="text-gray-800 font-medium">{{ profile.date_of_birth|date:"F d, Y"|default:"Not provided" }}</p>
+                    <div class="rounded-2xl bg-gray-50 p-4">
+                        <label class="text-sm font-medium text-gray-500">Date of Birth</label>
+                        <p class="mt-1 font-semibold text-gray-800">{{ profile.date_of_birth|date:"F d, Y"|default:"Not provided" }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- Personal Information -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Personal Information</h2>
+            <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-indigo-100">
+                <h2 class="text-xl font-bold text-gray-900 mb-5">Personal Information</h2>
                 <div class="space-y-4">
-                    <div>
-                        <label class="text-gray-600 text-sm">First Name</label>
-                        <p class="text-gray-800 font-medium">{{ user.first_name|default:"Not provided" }}</p>
+                    <div class="rounded-2xl bg-indigo-50 p-4">
+                        <label class="text-sm font-medium text-gray-500">First Name</label>
+                        <p class="mt-1 font-semibold text-gray-800">{{ user.first_name|default:"Not provided" }}</p>
                     </div>
-                    <div>
-                        <label class="text-gray-600 text-sm">Last Name</label>
-                        <p class="text-gray-800 font-medium">{{ user.last_name|default:"Not provided" }}</p>
+                    <div class="rounded-2xl bg-blue-50 p-4">
+                        <label class="text-sm font-medium text-gray-500">Last Name</label>
+                        <p class="mt-1 font-semibold text-gray-800">{{ user.last_name|default:"Not provided" }}</p>
                     </div>
-                    <div>
-                        <label class="text-gray-600 text-sm">Member Since</label>
-                        <p class="text-gray-800 font-medium">{{ user.date_joined|date:"F d, Y" }}</p>
+                    <div class="rounded-2xl bg-gray-50 p-4">
+                        <label class="text-sm font-medium text-gray-500">Member Since</label>
+                        <p class="mt-1 font-semibold text-gray-800">{{ user.date_joined|date:"F d, Y" }}</p>
                     </div>
                 </div>
             </div>
@@ -80,24 +86,25 @@
 
         <!-- Bio -->
         {% if profile.bio %}
-            <div class="bg-white rounded-lg shadow-md p-6 mt-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Bio</h2>
-                <p class="text-gray-700">{{ profile.bio }}</p>
+            <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-indigo-100">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Bio</h2>
+                <p class="leading-7 text-gray-700">{{ profile.bio }}</p>
             </div>
         {% endif %}
 
         <!-- Account Actions -->
-        <div class="bg-white rounded-lg shadow-md p-6 mt-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Account Actions</h2>
+        <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-indigo-100">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Account Actions</h2>
             <div class="flex gap-4 flex-wrap">
-                <a href="{% url 'password_reset' %}" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
+                <a href="{% url 'password_reset' %}" class="rounded-xl bg-blue-800 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-900">
                     Reset Password via Email
                 </a>
-                <a href="{% url 'logout' %}" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                <a href="{% url 'logout' %}" class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600">
                     Logout
                 </a>
             </div>
         </div>
+
     </div>
 </div>
 {% endblock %}
